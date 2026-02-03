@@ -566,6 +566,7 @@
                     ref={buttonRef}
                     className="no-button"
                     onMouseEnter={handleNoHover}
+                    onClick={handleNoHover}
                     style={!isMobile ? { pointerEvents: 'none' } : {}}
                   >
                     No
@@ -639,6 +640,7 @@
                   <button
                     className="no-button"
                     onMouseEnter={handleNoHover}
+                    onClick={handleNoHover}
                     style={{}}
                   >
                     No
@@ -679,7 +681,7 @@
               </button>
             );
             const noBtn = (
-              <button className="no-button" onMouseEnter={handleNoHover}>
+              <button className="no-button" onMouseEnter={handleNoHover} onClick={handleNoHover}>
                 No
               </button>
             );
@@ -750,6 +752,7 @@
                     <button
                       className="no-button"
                       onMouseEnter={handleNoHover}
+                      onClick={handleNoHover}
                       disabled={disabled}
                       style={disabled ? {
                         opacity: 0.4,
@@ -831,7 +834,7 @@
                         Yes! 💕
                       </button>
                     ) : (
-                      <button key={btn.id} className="no-button" onMouseEnter={() => handleNoHover(btn.id)}
+                      <button key={btn.id} className="no-button" onMouseEnter={() => handleNoHover(btn.id)} onClick={() => handleNoHover(btn.id)}
                         style={{ padding: '12px 24px', fontSize: '1rem' }}>
                         No
                       </button>
