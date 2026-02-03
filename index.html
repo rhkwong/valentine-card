@@ -680,7 +680,7 @@
               </button>
             );
             const noBtn = (
-              <button className="no-button" onMouseEnter={handleNoHover} onClick={handleNoHover}>
+              <button className="no-button" onMouseEnter={handleNoHover} onTouchEnd={(e) => { e.preventDefault(); handleNoHover(); }}>
                 No
               </button>
             );
