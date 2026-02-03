@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Will You Be My Valentine? 💝</title>
+
+  <!-- React 18 CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel Standalone for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* Reset & Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 50%, #ffd4e8 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+      color: #6b2d5c;
+    }
+
+    /* Layout */
+    #root {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 20px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(255, 105, 180, 0.2);
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: #d91f7a;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(255, 105, 180, 0.3);
+    }
+
+    .strategy-info {
+      margin-top: 15px;
+      padding: 10px;
+      background: #fff0f8;
+      border-radius: 8px;
+      border-left: 4px solid #ff69b4;
+    }
+
+    .strategy-info h3 {
+      color: #d91f7a;
+      margin-bottom: 5px;
+    }
+
+    .strategy-info p {
+      color: #8b4789;
+      font-size: 0.9rem;
+    }
+
+    .strategy-selector {
+      margin-top: 15px;
+    }
+
+    .strategy-selector label {
+      font-weight: 600;
+      color: #8b4789;
+      margin-right: 10px;
+    }
+
+    .strategy-selector select {
+      padding: 8px 12px;
+      border: 2px solid #ffb6d9;
+      border-radius: 8px;
+      background: white;
+      color: #6b2d5c;
+      font-size: 1rem;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .strategy-selector select:hover {
+      border-color: #ff69b4;
+    }
+
+    .strategy-selector select:focus {
+      border-color: #d91f7a;
+      box-shadow: 0 0 0 3px rgba(217, 31, 122, 0.1);
+    }
+
+    /* Card Container */
+    .card-container {
+      background: white;
+      border-radius: 0;
+      padding: 40px;
+      box-shadow: none;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .question {
+      font-size: 2rem;
+      color: #d91f7a;
+      margin-bottom: 40px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .attempt-counter {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #fff0f8;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      color: #8b4789;
+      font-weight: 600;
+    }
+
+    /* Buttons */
+    .button-container {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 16px 40px;
+      font-size: 1.3rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      outline: none;
+    }
+
+    .yes-button {
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff1f7a 100%);
+      color: white;
+    }
+
+    .yes-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 31, 122, 0.4);
+    }
+
+    .yes-button:active {
+      transform: translateY(0);
+    }
+
+    .no-button {
+      background: linear-gradient(135deg, #ddd 0%, #bbb 100%);
+      color: #666;
+    }
+
+    .no-button:hover {
+      background: linear-gradient(135deg, #ccc 0%, #aaa 100%);
+    }
+
+    /* Strategy-specific styles */
+    .dodger-container {
+      width: 100%;
+      flex: 1;
+      position: relative;
+    }
+
+    .dodger-button-wrapper {
+      position: absolute;
+      transition: all 0.1s ease-out;
+    }
+
+    .grower-yes-button {
+      transition: transform 0.3s ease-out;
+    }
+
+    .switcharoo-container {
+      display: flex;
+      gap: 30px;
+      transition: all 0.5s ease-in-out;
+    }
+
+    .switcharoo-container.swapped {
+      flex-direction: row-reverse;
+    }
+
+    /* Success Screen */
+    .success-screen {
+      background: white;
+      border-radius: 16px;
+      padding: 60px 40px;
+      box-shadow: 0 8px 32px rgba(255, 105, 180, 0.3);
+      text-align: center;
+      animation: celebrationBounce 0.6s ease-out;
+    }
+
+    .success-screen h2 {
+      font-size: 3rem;
+      color: #ff1f7a;
+      margin-bottom: 20px;
+    }
+
+    .success-screen .hearts {
+      font-size: 4rem;
+      margin: 20px 0;
+      animation: heartFloat 2s infinite;
+    }
+
+    .success-screen p {
+      font-size: 1.3rem;
+      color: #8b4789;
+      margin-bottom: 30px;
+    }
+
+    .success-screen button {
+      padding: 16px 40px;
+      font-size: 1.1rem;
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff1f7a 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .success-screen button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 31, 122, 0.4);
+    }
+
+    /* Animations */
+    @keyframes celebrationBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes heartFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .question {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+      }
+
+      button {
+        padding: 14px 30px;
+        font-size: 1.1rem;
+      }
+
+      .card-container {
+        padding: 20px;
+      }
+
+      .success-screen {
+        padding: 40px 20px;
+      }
+
+      .success-screen h2 {
+        font-size: 2rem;
+      }
+
+      .success-screen .hearts {
+        font-size: 3rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .question {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+      }
+
+      .button-container {
+        gap: 15px;
+      }
+
+      button {
+        padding: 12px 24px;
+        font-size: 1rem;
+      }
+
+      .card-container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ============================================================================
+    // SECTION 1: UTILITY FUNCTIONS
+    // ============================================================================
+
+    /**
+     * Generate random position within viewport bounds
+     */
+    function getRandomPosition(padding = 50) {
+      const maxX = window.innerWidth - padding * 2;
+      const maxY = window.innerHeight - padding * 2;
+      return {
+        x: Math.random() * maxX + padding,
+        y: Math.random() * maxY + padding
+      };
+    }
+
+    /**
+     * Calculate distance between two points
+     */
+    function getDistance(x1, y1, x2, y2) {
+      return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+    }
+
+    /**
+     * Constrain position to viewport bounds
+     */
+    function constrainToViewport(x, y, elementWidth = 150, elementHeight = 60, padding = 20) {
+      const maxX = window.innerWidth - elementWidth - padding;
+      const maxY = window.innerHeight - elementHeight - padding;
+
+      return {
+        x: Math.max(padding, Math.min(x, maxX)),
+        y: Math.max(padding, Math.min(y, maxY))
+      };
+    }
+
+    /**
+     * Parse URL hash parameters
+     * Example: #name=Sarah&opt=1
+     * Returns: { name: 'Sarah', opt: '1' }
+     */
+    function parseURLParams() {
+      const hash = window.location.hash.slice(1); // Remove #
+      const params = {};
+
+      if (hash) {
+        hash.split('&').forEach(param => {
+          const [key, value] = param.split('=');
+          if (key && value) {
+            params[key] = decodeURIComponent(value);
+          }
+        });
+      }
+
+      return params;
+    }
+
+    /**
+     * Update URL hash with name and opt parameters
+     */
+    function updateURLHash(name, strategyId) {
+      const params = [];
+      if (name) params.push(`name=${encodeURIComponent(name)}`);
+      if (strategyId) params.push(`opt=${encodeURIComponent(strategyId)}`);
+
+      window.location.hash = params.join('&');
+    }
+
+    // ============================================================================
+    // SECTION 2: STRATEGY REGISTRY
+    // ============================================================================
+
+    const StrategyRegistry = (() => {
+      const strategies = new Map();
+
+      return {
+        register(strategy) {
+          if (!strategy.id || !strategy.createComponent) {
+            console.error('Invalid strategy: must have id and createComponent', strategy);
+            return;
+          }
+          strategies.set(strategy.id, strategy);
+        },
+
+        get(id) {
+          return strategies.get(id);
+        },
+
+        getAll() {
+          return Array.from(strategies.values());
+        },
+
+        getByCategory() {
+          const categorized = {};
+          strategies.forEach(strategy => {
+            const cat = strategy.category || 'Other';
+            if (!categorized[cat]) categorized[cat] = [];
+            categorized[cat].push(strategy);
+          });
+          return categorized;
+        }
+      };
+    })();
+
+    // ============================================================================
+    // SECTION 3: STRATEGY MODULES
+    // ============================================================================
+
+    /**
+     * THE DODGER STRATEGY
+     * No button moves away from cursor when approached
+     */
+    function createDodgerStrategy() {
+      return {
+        id: '1',
+        name: 'The Dodger',
+        description: 'No button moves away from cursor',
+        category: 'Movement & Evasion',
+
+        createComponent: function(props) {
+          const DodgerComponent = ({ question, onComplete, onNoAttempt }) => {
+            const [position, setPosition] = useState({ x: 200, y: 100 });
+            const [dodgeSpeed, setDodgeSpeed] = useState(1.5);
+            const buttonRef = useRef(null);
+            const containerRef = useRef(null);
+            const safeDistance = 150;
+            const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            const getRandomPosInContainer = () => {
+              if (!containerRef.current || !buttonRef.current) return position;
+              const cr = containerRef.current.getBoundingClientRect();
+              const br = buttonRef.current.getBoundingClientRect();
+              const padding = 10;
+              const maxX = cr.width - br.width - padding;
+              const maxY = cr.height - br.height - padding;
+              return {
+                x: Math.random() * maxX + padding,
+                y: Math.random() * maxY + padding
+              };
+            };
+
+            const handleMouseMove = (e) => {
+              if (isMobile || !buttonRef.current || !containerRef.current) return;
+
+              const containerRect = containerRef.current.getBoundingClientRect();
+              const rect = buttonRef.current.getBoundingClientRect();
+              const buttonCenterX = rect.left + rect.width / 2;
+              const buttonCenterY = rect.top + rect.height / 2;
+
+              const distance = getDistance(e.clientX, e.clientY, buttonCenterX, buttonCenterY);
+
+              if (distance < safeDistance) {
+                const angle = Math.atan2(buttonCenterY - e.clientY, buttonCenterX - e.clientX);
+                const escapeDistance = (safeDistance - distance) * dodgeSpeed;
+
+                let newX = position.x + Math.cos(angle) * escapeDistance;
+                let newY = position.y + Math.sin(angle) * escapeDistance;
+
+                const padding = 10;
+                const maxX = containerRect.width - rect.width - padding;
+                const maxY = containerRect.height - rect.height - padding;
+                newX = Math.max(padding, Math.min(newX, maxX));
+                newY = Math.max(padding, Math.min(newY, maxY));
+
+                setPosition({ x: newX, y: newY });
+                setDodgeSpeed(prev => Math.min(prev + 0.1, 3));
+              }
+            };
+
+            const handleNoHover = () => {
+              onNoAttempt();
+            };
+
+            // Desktop: dodge on mouse move
+            useEffect(() => {
+              if (isMobile) return;
+              document.addEventListener('mousemove', handleMouseMove);
+              return () => document.removeEventListener('mousemove', handleMouseMove);
+            }, [position, dodgeSpeed]);
+
+            // Mobile: move randomly at high speed
+            useEffect(() => {
+              if (!isMobile) return;
+              const interval = setInterval(() => {
+                setPosition(getRandomPosInContainer());
+              }, 100);
+              return () => clearInterval(interval);
+            }, []);
+
+            return (
+              <div className="dodger-container" ref={containerRef}>
+                <div className="question">{question}</div>
+                <div className="button-container">
+                  <button className="yes-button" onClick={onComplete}>
+                    Yes! 💕
+                  </button>
+                </div>
+                <div
+                  className="dodger-button-wrapper"
+                  style={{
+                    left: `${position.x}px`,
+                    top: `${position.y}px`
+                  }}
+                >
+                  <button
+                    ref={buttonRef}
+                    className="no-button"
+                    onMouseEnter={handleNoHover}
+                    style={!isMobile ? { pointerEvents: 'none' } : {}}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            );
+          };
+
+          return <DodgerComponent {...props} />;
+        }
+      };
+    }
+
+    /**
+     * THE GROWER STRATEGY
+     * Yes button grows larger each time No is hovered
+     */
+    function createGrowerStrategy() {
+      return {
+        id: '2',
+        name: 'The Grower',
+        description: 'Yes button grows larger when No is hovered',
+        category: 'Size Manipulation',
+
+        createComponent: function(props) {
+          const GrowerComponent = ({ question, onComplete, onNoAttempt }) => {
+            const [phase, setPhase] = useState(0); // 0=idle, 1=growing, 2=done
+            const yesRef = useRef(null);
+
+            const handleNoHover = () => {
+              if (phase === 0) {
+                onNoAttempt();
+                // Capture starting size, then animate to full card
+                const btn = yesRef.current;
+                const card = btn.closest('.card-container');
+                const btnRect = btn.getBoundingClientRect();
+                const cardRect = card.getBoundingClientRect();
+                // Set explicit starting size so transition has a from-value
+                btn.style.transition = 'none';
+                btn.style.position = 'absolute';
+                btn.style.zIndex = 9999;
+                btn.style.top = (btnRect.top - cardRect.top) + 'px';
+                btn.style.left = (btnRect.left - cardRect.left) + 'px';
+                btn.style.width = btnRect.width + 'px';
+                btn.style.height = btnRect.height + 'px';
+                // Force reflow then animate to full size
+                btn.offsetHeight;
+                btn.style.transition = 'all 4s linear';
+                btn.style.top = '0px';
+                btn.style.left = '0px';
+                btn.style.width = '100%';
+                btn.style.height = '100%';
+                btn.style.borderRadius = '0';
+                btn.style.fontSize = '3rem';
+                setPhase(1);
+              }
+            };
+
+            return (
+              <div>
+                <div className="question">{question}</div>
+                <div className="button-container">
+                  <button
+                    ref={yesRef}
+                    className="yes-button grower-yes-button"
+                    onClick={onComplete}
+                  >
+                    Yes! 💕
+                  </button>
+                  <button
+                    className="no-button"
+                    onMouseEnter={handleNoHover}
+                    style={{}}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            );
+          };
+
+          return <GrowerComponent {...props} />;
+        }
+      };
+    }
+
+    /**
+     * THE SWITCHAROO STRATEGY
+     * Buttons swap positions when cursor approaches No
+     */
+    function createSwitcharooStrategy() {
+      return {
+        id: '3',
+        name: 'The Switcharoo',
+        description: 'Buttons swap positions when No is approached',
+        category: 'Deception & Trickery',
+
+        createComponent: function(props) {
+          const SwitcharooComponent = ({ question, onComplete, onNoAttempt }) => {
+            const [isSwapped, setIsSwapped] = useState(false);
+
+            const handleNoHover = () => {
+              setIsSwapped(prev => !prev);
+              onNoAttempt();
+            };
+
+            const yesBtn = (
+              <button className="yes-button" onClick={onComplete}>
+                Yes! 💕
+              </button>
+            );
+            const noBtn = (
+              <button className="no-button" onMouseEnter={handleNoHover}>
+                No
+              </button>
+            );
+
+            return (
+              <div>
+                <div className="question">{question}</div>
+                <div className="button-container">
+                  {isSwapped ? <>{noBtn}{yesBtn}</> : <>{yesBtn}{noBtn}</>}
+                </div>
+              </div>
+            );
+          };
+
+          return <SwitcharooComponent {...props} />;
+        }
+      };
+    }
+
+    /**
+     * THE TIMEOUT STRATEGY
+     * No button grays out on hover with a ridiculous countdown
+     */
+    function createTimeoutStrategy() {
+      return {
+        id: '4',
+        name: 'The Timeout',
+        description: 'No button becomes disabled with an absurd countdown',
+        category: 'Technical Tricks',
+
+        createComponent: function(props) {
+          const TimeoutComponent = ({ question, onComplete, onNoAttempt }) => {
+            const [disabled, setDisabled] = useState(false);
+            const [seconds, setSeconds] = useState(9999*31536000 + 99*86400 + 9*3600 + 9*60 + 9);
+
+            const handleNoHover = () => {
+              if (!disabled) {
+                onNoAttempt();
+                setDisabled(true);
+              }
+            };
+
+            useEffect(() => {
+              if (!disabled) return;
+              const interval = setInterval(() => {
+                setSeconds(prev => prev - 1);
+              }, 1000);
+              return () => clearInterval(interval);
+            }, [disabled]);
+
+            const formatTime = (s) => {
+              const years = Math.floor(s / 31536000);
+              const days = Math.floor((s % 31536000) / 86400);
+              const hrs = Math.floor((s % 86400) / 3600);
+              const mins = Math.floor((s % 3600) / 60);
+              const secs = s % 60;
+              return `${years}y ${days}d ${hrs}h ${mins}m ${secs}s`;
+            };
+
+            return (
+              <div>
+                <div className="question">{question}</div>
+                <div className="button-container">
+                  <button className="yes-button" onClick={onComplete}>
+                    Yes! 💕
+                  </button>
+                  <div style={{ textAlign: 'center' }}>
+                    <button
+                      className="no-button"
+                      onMouseEnter={handleNoHover}
+                      disabled={disabled}
+                      style={disabled ? {
+                        opacity: 0.4,
+                        cursor: 'not-allowed',
+                        pointerEvents: 'none',
+                      } : {}}
+                    >
+                      No
+                    </button>
+                    {disabled && (
+                      <div style={{
+                        marginTop: '8px',
+                        fontSize: '0.8rem',
+                        color: '#999',
+                      }}>
+                        Available in {formatTime(seconds)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          };
+
+          return <TimeoutComponent {...props} />;
+        }
+      };
+    }
+
+    /**
+     * THE MULTIPLIER STRATEGY
+     * Each hover on No replaces it with 4 Yes buttons and 1 No button
+     */
+    function createMultiplierStrategy() {
+      return {
+        id: '5',
+        name: 'The Multiplier',
+        description: 'No button splits into 4 Yes buttons and 1 No button on hover',
+        category: 'Nuclear Options',
+
+        createComponent: function(props) {
+          const MultiplierComponent = ({ question, onComplete, onNoAttempt }) => {
+            // buttons: array of { type: 'yes' | 'no', id }
+            const [buttons, setButtons] = useState([
+              { type: 'yes', id: 'y0' },
+              { type: 'no', id: 'n0' },
+            ]);
+            const counterRef = useRef(1);
+
+            const handleNoHover = (noId) => {
+              onNoAttempt();
+              setButtons(prev => {
+                const next = [];
+                for (const btn of prev) {
+                  if (btn.id === noId) {
+                    const c = counterRef.current;
+                    next.push({ type: 'yes', id: `y${c}` });
+                    next.push({ type: 'yes', id: `y${c+1}` });
+                    next.push({ type: 'yes', id: `y${c+2}` });
+                    next.push({ type: 'yes', id: `y${c+3}` });
+                    next.push({ type: 'no', id: `n${c}` });
+                    counterRef.current = c + 4;
+                  } else {
+                    next.push(btn);
+                  }
+                }
+                return next;
+              });
+            };
+
+            return (
+              <div>
+                <div className="question">{question}</div>
+                <div className="button-container" style={{ maxWidth: '600px', gap: '10px' }}>
+                  {buttons.map(btn =>
+                    btn.type === 'yes' ? (
+                      <button key={btn.id} className="yes-button" onClick={onComplete}
+                        style={{ padding: '12px 24px', fontSize: '1rem' }}>
+                        Yes! 💕
+                      </button>
+                    ) : (
+                      <button key={btn.id} className="no-button" onMouseEnter={() => handleNoHover(btn.id)}
+                        style={{ padding: '12px 24px', fontSize: '1rem' }}>
+                        No
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            );
+          };
+
+          return <MultiplierComponent {...props} />;
+        }
+      };
+    }
+
+    // Register all strategies
+    StrategyRegistry.register(createDodgerStrategy());
+    StrategyRegistry.register(createGrowerStrategy());
+    StrategyRegistry.register(createSwitcharooStrategy());
+    StrategyRegistry.register(createTimeoutStrategy());
+    StrategyRegistry.register(createMultiplierStrategy());
+
+    // ============================================================================
+    // SECTION 4: CORE COMPONENTS
+    // ============================================================================
+
+    /**
+     * SUCCESS SCREEN
+     * Shown after "Yes" is clicked
+     */
+    function SuccessScreen({ recipientName, onReset }) {
+      const canvasRef = useRef(null);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let animationId;
+
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // Heart particles
+        const hearts = [];
+        const colors = ['#ff1f7a','#ff6b9d','#ff85b3','#ffb6d9','#d91f7a','#ff3e8e','#e84393','#fd79a8'];
+
+        function spawnHeart() {
+          const size = Math.random() * 18 + 8;
+          hearts.push({
+            x: Math.random() * canvas.width,
+            y: canvas.height + size,
+            size,
+            speed: Math.random() * 1.5 + 0.5,
+            drift: (Math.random() - 0.5) * 0.8,
+            wobbleAmp: Math.random() * 20 + 10,
+            wobbleSpeed: Math.random() * 0.02 + 0.01,
+            phase: Math.random() * Math.PI * 2,
+            opacity: Math.random() * 0.5 + 0.3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 0.02,
+          });
+        }
+
+        // Pre-fill some hearts
+        for (let i = 0; i < 40; i++) {
+          spawnHeart();
+          hearts[hearts.length - 1].y = Math.random() * canvas.height;
+        }
+
+        let tick = 0;
+
+        function drawHeart(cx, cy, size, color, opacity, rotation) {
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(rotation);
+          ctx.globalAlpha = opacity;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          const s = size / 2;
+          ctx.moveTo(0, s * 0.4);
+          ctx.bezierCurveTo(-s, -s * 0.5, -s * 2, s * 0.3, 0, s * 1.5);
+          ctx.bezierCurveTo(s * 2, s * 0.3, s, -s * 0.5, 0, s * 0.4);
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+
+        function drawBigEmoji(t) {
+          const cx = canvas.width / 2;
+          const cy = canvas.height / 2;
+          const pulse = 1 + Math.sin(t * 0.03) * 0.05;
+          const size = Math.min(canvas.width, canvas.height) * 0.15 * pulse;
+
+          ctx.save();
+          ctx.font = `${size}px serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.globalAlpha = 1;
+          ctx.fillText('🥰', cx, cy);
+          ctx.restore();
+        }
+
+        function frame() {
+          tick++;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Spawn new hearts
+          if (tick % 6 === 0) spawnHeart();
+
+          // Update & draw floating hearts
+          for (let i = hearts.length - 1; i >= 0; i--) {
+            const h = hearts[i];
+            h.y -= h.speed;
+            h.x += h.drift + Math.sin(h.phase + tick * h.wobbleSpeed) * 0.5;
+            h.rotation += h.rotSpeed;
+
+            if (h.y < -h.size * 2) {
+              hearts.splice(i, 1);
+              continue;
+            }
+
+            drawHeart(h.x, h.y, h.size, h.color, h.opacity, h.rotation);
+          }
+
+          // Big center emoji
+          drawBigEmoji(tick);
+
+          animationId = requestAnimationFrame(frame);
+        }
+
+        frame();
+
+        return () => {
+          cancelAnimationFrame(animationId);
+          window.removeEventListener('resize', resize);
+        };
+      }, []);
+
+      return (
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'linear-gradient(135deg, #ffeef8 0%, #ffe0f0 50%, #ffd4e8 100%)',
+          }}
+        />
+      );
+    }
+
+    /**
+     * CARD CONTAINER
+     * Renders the current strategy and tracks attempts
+     */
+    function CardContainer({ strategy, question, onComplete }) {
+      if (!strategy) {
+        return (
+          <div className="card-container">
+            <p>Strategy not found. Please select a different one.</p>
+          </div>
+        );
+      }
+
+      const StrategyComponent = strategy.createComponent({
+        question,
+        onComplete,
+        onNoAttempt: () => {}
+      });
+
+      return (
+        <div className="card-container">
+          {StrategyComponent}
+        </div>
+      );
+    }
+
+    /**
+     * STRATEGY SELECTOR
+     * Dropdown to choose strategy
+     */
+    function StrategySelector({ currentStrategyId, onChange }) {
+      const categorized = StrategyRegistry.getByCategory();
+
+      return (
+        <div className="strategy-selector">
+          <label htmlFor="strategy-select">Choose a card style:</label>
+          <select
+            id="strategy-select"
+            value={currentStrategyId}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            {Object.entries(categorized).map(([category, strategies]) => (
+              <optgroup key={category} label={category}>
+                {strategies.map(strategy => (
+                  <option key={strategy.id} value={strategy.id}>
+                    {strategy.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    /**
+     * APP COMPONENT
+     * Main application logic
+     */
+    function App() {
+      const [recipientName, setRecipientName] = useState('');
+      const [currentStrategyId, setCurrentStrategyId] = useState('1');
+      const [showSuccess, setShowSuccess] = useState(false);
+
+      const initialized = useRef(false);
+
+      // Parse URL hash on mount and on hash change
+      useEffect(() => {
+        function loadFromHash() {
+          const params = parseURLParams();
+          if (params.name) {
+            setRecipientName(params.name);
+          }
+          if (params.opt) {
+            const strategy = StrategyRegistry.get(params.opt);
+            if (strategy) {
+              setCurrentStrategyId(params.opt);
+              setShowSuccess(false);
+            }
+          }
+          initialized.current = true;
+        }
+        loadFromHash();
+        window.addEventListener('hashchange', loadFromHash);
+        return () => window.removeEventListener('hashchange', loadFromHash);
+      }, []);
+
+      // Update URL hash when state changes (only after initial load)
+      useEffect(() => {
+        if (initialized.current) {
+          updateURLHash(recipientName, currentStrategyId);
+        }
+      }, [recipientName, currentStrategyId]);
+
+      const currentStrategy = StrategyRegistry.get(currentStrategyId);
+      const question = recipientName ? `Will you be my Valentine, ${recipientName}?` : 'Will you be my valentine?';
+
+      const handleStrategyChange = (newStrategyId) => {
+        setCurrentStrategyId(newStrategyId);
+        setShowSuccess(false);
+      };
+
+      const handleComplete = () => {
+        setShowSuccess(true);
+      };
+
+      const handleReset = () => {
+        setShowSuccess(false);
+      };
+
+      return (
+        <>
+          {showSuccess ? (
+            <SuccessScreen
+              recipientName={recipientName}
+              onReset={handleReset}
+            />
+          ) : (
+            <CardContainer
+              strategy={currentStrategy}
+              question={question}
+              onComplete={handleComplete}
+            />
+          )}
+        </>
+      );
+    }
+
+    // ============================================================================
+    // SECTION 5: INITIALIZE
+    // ============================================================================
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
