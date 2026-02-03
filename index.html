@@ -600,29 +600,30 @@
             const handleNoHover = () => {
               if (phase === 0) {
                 onNoAttempt();
-                // Capture starting size, then animate to full card
-                const btn = yesRef.current;
-                const card = btn.closest('.card-container');
-                const btnRect = btn.getBoundingClientRect();
-                const cardRect = card.getBoundingClientRect();
-                // Set explicit starting size so transition has a from-value
-                btn.style.transition = 'none';
-                btn.style.position = 'absolute';
-                btn.style.zIndex = 9999;
-                btn.style.top = (btnRect.top - cardRect.top) + 'px';
-                btn.style.left = (btnRect.left - cardRect.left) + 'px';
-                btn.style.width = btnRect.width + 'px';
-                btn.style.height = btnRect.height + 'px';
-                // Force reflow then animate to full size
-                btn.offsetHeight;
-                btn.style.transition = 'all 4s linear';
-                btn.style.top = '0px';
-                btn.style.left = '0px';
-                btn.style.width = '100%';
-                btn.style.height = '100%';
-                btn.style.borderRadius = '0';
-                btn.style.fontSize = '3rem';
                 setPhase(1);
+                // Delay growth so mobile tap doesn't immediately hit the Yes button
+                setTimeout(() => {
+                  const btn = yesRef.current;
+                  if (!btn) return;
+                  const card = btn.closest('.card-container');
+                  const btnRect = btn.getBoundingClientRect();
+                  const cardRect = card.getBoundingClientRect();
+                  btn.style.transition = 'none';
+                  btn.style.position = 'absolute';
+                  btn.style.zIndex = 9999;
+                  btn.style.top = (btnRect.top - cardRect.top) + 'px';
+                  btn.style.left = (btnRect.left - cardRect.left) + 'px';
+                  btn.style.width = btnRect.width + 'px';
+                  btn.style.height = btnRect.height + 'px';
+                  btn.offsetHeight;
+                  btn.style.transition = 'all 4s linear';
+                  btn.style.top = '0px';
+                  btn.style.left = '0px';
+                  btn.style.width = '100%';
+                  btn.style.height = '100%';
+                  btn.style.borderRadius = '0';
+                  btn.style.fontSize = '3rem';
+                }, 200);
               }
             };
 
@@ -643,7 +644,7 @@
                     onClick={handleNoHover}
                     style={phase === 1 ? { pointerEvents: 'none' } : {}}
                   >
-                    {phase === 1 ? 'Please hold...' : 'No'}
+                    {phase === 1 ? 'Hold up...' : 'No'}
                   </button>
                 </div>
               </div>
