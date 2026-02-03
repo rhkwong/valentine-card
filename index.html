@@ -1156,18 +1156,23 @@
         if (allMode) {
           const nextIndex = allIndex + 1;
           if (nextIndex >= allStrategies.length) {
-            setShowSuccess(true);
+            pendingNext.current = 'success';
+            setTransitioning(true);
           } else {
             pendingNext.current = nextIndex;
             setTransitioning(true);
           }
         } else {
-          setShowSuccess(true);
+          pendingNext.current = 'success';
+          setTransitioning(true);
         }
       };
 
       const handleShutterMidpoint = () => {
-        if (pendingNext.current !== null) {
+        if (pendingNext.current === 'success') {
+          setShowSuccess(true);
+          pendingNext.current = null;
+        } else if (pendingNext.current !== null) {
           const idx = pendingNext.current;
           setAllIndex(idx);
           setCurrentStrategyId(allStrategies[idx].id);
