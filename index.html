@@ -253,6 +253,44 @@
       box-shadow: 0 6px 20px rgba(255, 31, 122, 0.4);
     }
 
+    /* Shutter Transition */
+    .shutter-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 10000;
+      display: flex;
+      pointer-events: none;
+    }
+
+    .shutter-strip {
+      flex: 1;
+      background: linear-gradient(135deg, #ff6b9d 0%, #ff1f7a 100%);
+      transform: scaleY(0);
+    }
+
+    .shutter-strip.closing {
+      transform-origin: top;
+      animation: shutterClose 0.3s ease-in forwards;
+    }
+
+    .shutter-strip.opening {
+      transform-origin: bottom;
+      animation: shutterOpen 0.3s ease-out forwards;
+    }
+
+    @keyframes shutterClose {
+      0% { transform: scaleY(0); }
+      100% { transform: scaleY(1); }
+    }
+
+    @keyframes shutterOpen {
+      0% { transform: scaleY(1); }
+      100% { transform: scaleY(0); }
+    }
+
     /* Animations */
     @keyframes celebrationBounce {
       0%, 100% { transform: scale(1); }
@@ -1008,6 +1046,45 @@
     }
 
     /**
+     * SHUTTER TRANSITION
+     */
+    function ShutterTransition({ active, onMidpoint, onDone }) {
+      const STRIP_COUNT = 8;
+      const [phase, setPhase] = useState(null); // 'closing' | 'opening'
+
+      useEffect(() => {
+        if (active) {
+          setPhase('closing');
+        }
+      }, [active]);
+
+      const handleAnimationEnd = () => {
+        if (phase === 'closing') {
+          onMidpoint();
+          setPhase('opening');
+        } else if (phase === 'opening') {
+          setPhase(null);
+          onDone();
+        }
+      };
+
+      if (!phase) return null;
+
+      return (
+        <div className="shutter-overlay">
+          {Array.from({ length: STRIP_COUNT }).map((_, i) => (
+            <div
+              key={i}
+              className={`shutter-strip ${phase}`}
+              style={{ animationDelay: `${i * 0.04}s` }}
+              onAnimationEnd={i === STRIP_COUNT - 1 ? handleAnimationEnd : undefined}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    /**
      * APP COMPONENT
      * Main application logic
      */
@@ -1015,8 +1092,14 @@
       const [recipientName, setRecipientName] = useState('');
       const [currentStrategyId, setCurrentStrategyId] = useState('1');
       const [showSuccess, setShowSuccess] = useState(false);
+      const [allMode, setAllMode] = useState(true);
+      const [allIndex, setAllIndex] = useState(0);
+      const [transitioning, setTransitioning] = useState(false);
+      const pendingNext = useRef(null);
 
       const initialized = useRef(false);
+
+      const allStrategies = StrategyRegistry.getAll();
 
       // Parse URL hash on mount and on hash change
       useEffect(() => {
@@ -1025,7 +1108,11 @@
           if (params.name) {
             setRecipientName(params.name);
           }
+          if (params.all === '0' || params.all === 'false') {
+            setAllMode(false);
+          }
           if (params.opt) {
+            setAllMode(false);
             const strategy = StrategyRegistry.get(params.opt);
             if (strategy) {
               setCurrentStrategyId(params.opt);
@@ -1041,13 +1128,22 @@
 
       // Update URL hash when state changes (only after initial load)
       useEffect(() => {
-        if (initialized.current) {
+        if (initialized.current && !allMode) {
           updateURLHash(recipientName, currentStrategyId);
         }
       }, [recipientName, currentStrategyId]);
 
       const currentStrategy = StrategyRegistry.get(currentStrategyId);
-      const question = recipientName ? `Will you be my Valentine, ${recipientName}?` : 'Will you be my valentine?';
+
+      const getQuestion = () => {
+        const name = recipientName;
+        if (allMode && allIndex > 0) {
+          const reallys = 'really '.repeat(allIndex - 1).trim();
+          const sure = reallys ? `${reallys} sure` : 'sure';
+          return name ? `Are you ${sure}, ${name}?` : `Are you ${sure}?`;
+        }
+        return name ? `Will you be my Valentine, ${name}?` : 'Will you be my valentine?';
+      };
 
       const handleStrategyChange = (newStrategyId) => {
         setCurrentStrategyId(newStrategyId);
@@ -1055,15 +1151,47 @@
       };
 
       const handleComplete = () => {
-        setShowSuccess(true);
+        if (allMode) {
+          const nextIndex = allIndex + 1;
+          if (nextIndex >= allStrategies.length) {
+            setShowSuccess(true);
+          } else {
+            pendingNext.current = nextIndex;
+            setTransitioning(true);
+          }
+        } else {
+          setShowSuccess(true);
+        }
+      };
+
+      const handleShutterMidpoint = () => {
+        if (pendingNext.current !== null) {
+          const idx = pendingNext.current;
+          setAllIndex(idx);
+          setCurrentStrategyId(allStrategies[idx].id);
+          pendingNext.current = null;
+        }
+      };
+
+      const handleShutterDone = () => {
+        setTransitioning(false);
       };
 
       const handleReset = () => {
         setShowSuccess(false);
+        if (allMode) {
+          setAllIndex(0);
+          setCurrentStrategyId(allStrategies[0]?.id || '1');
+        }
       };
 
       return (
         <>
+          <ShutterTransition
+            active={transitioning}
+            onMidpoint={handleShutterMidpoint}
+            onDone={handleShutterDone}
+          />
           {showSuccess ? (
             <SuccessScreen
               recipientName={recipientName}
@@ -1071,8 +1199,9 @@
             />
           ) : (
             <CardContainer
+              key={currentStrategyId}
               strategy={currentStrategy}
-              question={question}
+              question={getQuestion()}
               onComplete={handleComplete}
             />
           )}
