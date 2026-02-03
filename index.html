@@ -641,9 +641,9 @@
                     className="no-button"
                     onMouseEnter={handleNoHover}
                     onClick={handleNoHover}
-                    style={{}}
+                    style={phase === 1 ? { pointerEvents: 'none' } : {}}
                   >
-                    No
+                    {phase === 1 ? 'Please hold...' : 'No'}
                   </button>
                 </div>
               </div>
