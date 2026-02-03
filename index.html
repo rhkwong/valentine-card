@@ -608,13 +608,11 @@
                   const card = btn.closest('.card-container');
                   const btnRect = btn.getBoundingClientRect();
                   const cardRect = card.getBoundingClientRect();
-                  btn.style.transition = 'none';
-                  btn.style.position = 'absolute';
-                  btn.style.zIndex = 9999;
-                  btn.style.top = (btnRect.top - cardRect.top) + 'px';
-                  btn.style.left = (btnRect.left - cardRect.left) + 'px';
-                  btn.style.width = btnRect.width + 'px';
-                  btn.style.height = btnRect.height + 'px';
+                  btn.style.cssText = 'transition:none;position:absolute;z-index:9999;' +
+                    'top:' + (btnRect.top - cardRect.top) + 'px;' +
+                    'left:' + (btnRect.left - cardRect.left) + 'px;' +
+                    'width:' + btnRect.width + 'px;' +
+                    'height:' + btnRect.height + 'px;';
                   btn.offsetHeight;
                   btn.style.transition = 'all 4s linear';
                   btn.style.top = '0px';
@@ -623,7 +621,7 @@
                   btn.style.height = '100%';
                   btn.style.borderRadius = '0';
                   btn.style.fontSize = '3rem';
-                }, 200);
+                }, 1000);
               }
             };
 
