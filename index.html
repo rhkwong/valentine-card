@@ -480,10 +480,9 @@
         createComponent: function(props) {
           const DodgerComponent = ({ question, onComplete, onNoAttempt }) => {
             const [position, setPosition] = useState({ x: 200, y: 100 });
-            const [dodgeSpeed, setDodgeSpeed] = useState(1.5);
             const buttonRef = useRef(null);
             const containerRef = useRef(null);
-            const safeDistance = 150;
+            const yesButtonRef = useRef(null);
             const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
             const getRandomPosInContainer = () => {
@@ -498,6 +497,12 @@
                 y: Math.random() * maxY + padding
               };
             };
+
+            const [noClicks, setNoClicks] = useState(0);
+
+            // Speed and safe distance scale with clicks: [0]=slow, [5]=impossible
+            const dodgeSpeed = [0.5, 1.0, 1.8, 2.8, 4.0, 6.0][Math.min(noClicks, 5)];
+            const safeDistance = [100, 150, 200, 250, 350, 500][Math.min(noClicks, 5)];
 
             const handleMouseMove = (e) => {
               if (isMobile || !buttonRef.current || !containerRef.current) return;
@@ -523,12 +528,17 @@
                 newY = Math.max(padding, Math.min(newY, maxY));
 
                 setPosition({ x: newX, y: newY });
-                setDodgeSpeed(prev => Math.min(prev + 0.1, 3));
               }
             };
 
+            const lastNoClick = useRef(0);
+
             const handleNoHover = () => {
+              const now = Date.now();
+              if (now - lastNoClick.current < 1000) return;
+              lastNoClick.current = now;
               onNoAttempt();
+              setNoClicks(prev => prev + 1);
             };
 
             // Desktop: dodge on mouse move
@@ -536,42 +546,79 @@
               if (isMobile) return;
               document.addEventListener('mousemove', handleMouseMove);
               return () => document.removeEventListener('mousemove', handleMouseMove);
-            }, [position, dodgeSpeed]);
+            }, [position, noClicks]);
 
-            // Mobile: move randomly at high speed
+            // Mobile: move randomly, starting slow and getting faster with each click
+            const mobileInterval = [1500, 800, 400, 200, 100, 5][Math.min(noClicks, 5)];
+
+            const handleNoMobile = () => {
+              const now = Date.now();
+              if (now - lastNoClick.current < 1000) return;
+              lastNoClick.current = now;
+              onNoAttempt();
+              setNoClicks(prev => prev + 1);
+            };
+
             useEffect(() => {
               if (!isMobile) return;
               const interval = setInterval(() => {
                 setPosition(getRandomPosInContainer());
-              }, 100);
+              }, mobileInterval);
               return () => clearInterval(interval);
-            }, []);
+            }, [mobileInterval]);
 
             return (
               <div className="dodger-container" ref={containerRef}>
                 <div className="question">{question}</div>
-                <div className="button-container">
-                  <button className="yes-button" onClick={onComplete}>
+                <div className="button-container" style={{ position: 'relative', zIndex: 1 }}>
+                  <button ref={yesButtonRef} className="yes-button" onClick={onComplete}>
                     Yes! 💕
                   </button>
                 </div>
-                <div
-                  className="dodger-button-wrapper"
-                  style={{
-                    left: `${position.x}px`,
-                    top: `${position.y}px`
-                  }}
-                >
-                  <button
-                    ref={buttonRef}
-                    className="no-button"
-                    onMouseEnter={handleNoHover}
-                    onClick={handleNoHover}
-                    style={!isMobile ? { pointerEvents: 'none' } : {}}
-                  >
-                    No
-                  </button>
-                </div>
+                {(() => {
+                  const peeking = noClicks === 6;
+                  const hidden = noClicks >= 7;
+                  const settled = noClicks >= 6;
+                  let style;
+                  if (settled) {
+                    const yesRect = yesButtonRef.current?.getBoundingClientRect();
+                    const containerRect = containerRef.current?.getBoundingClientRect();
+                    if (yesRect && containerRect) {
+                      const offsetX = peeking ? 10 : 0;
+                      const offsetY = peeking ? 10 : 0;
+                      style = {
+                        left: `${yesRect.left - containerRect.left + offsetX}px`,
+                        top: `${yesRect.top - containerRect.top + offsetY}px`,
+                        transition: 'all 0.5s ease-out',
+                        zIndex: 0
+                      };
+                    }
+                  } else {
+                    style = {
+                      left: `${position.x}px`,
+                      top: `${position.y}px`,
+                      transition: (isMobile && mobileInterval < 200) ? 'none' : undefined
+                    };
+                  }
+
+                  const handlePeekClick = () => {
+                    setNoClicks(prev => prev + 1);
+                  };
+
+                  return (
+                    <div className="dodger-button-wrapper" style={style}>
+                      <button
+                        ref={buttonRef}
+                        className="no-button"
+                        onMouseEnter={settled ? undefined : (isMobile ? handleNoMobile : handleNoHover)}
+                        onClick={hidden ? onComplete : (peeking ? handlePeekClick : (isMobile ? handleNoMobile : handleNoHover))}
+                        style={!isMobile && !settled ? { pointerEvents: 'none' } : {}}
+                      >
+                        {noClicks === 0 ? 'No' : settled ? 'No' : `No, (click ${6 - noClicks} more times to confirm)`}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             );
           };
